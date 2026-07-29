@@ -956,3 +956,43 @@ a:hover { color: var(--primary); }
 .gen-step-body { flex: 1; }
 .gen-step-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem; }
 .gen-step-desc { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ── Site Footer ────────────────────────────────────────────────── */
+.ev-footer {
+  margin-top: 4rem;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  position: relative;
+}
+.ev-footer::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 2px;
+  background: var(--gradient-primary);
+  border-radius: 2px;
+}
+.ev-footer-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+.ev-footer-link {
+  color: var(--primary-light);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color var(--transition-fast), text-shadow var(--transition-fast);
+}
+.ev-footer-link:hover {
+  color: #fff;
+  text-shadow: 0 0 10px rgba(107, 131, 242, 0.7);
+}
+.ev-footer-dot {
+  color: var(--border);
+  font-size: 0.6rem;
+}
