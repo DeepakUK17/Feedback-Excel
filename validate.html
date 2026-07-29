@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Excel Validation — EduVerify</title>
+  <meta name="description" content="Upload and validate your college feedback Excel file instantly. Detect missing students, wrong subject counts, duplicates and more." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .error-row-item {
+      padding: 0.9rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      margin-bottom: 0.5rem;
+      background: var(--bg-card);
+      display: flex; align-items: flex-start; gap: 0.85rem;
+      transition: all var(--transition-fast);
+    }
+    .error-row-item:hover { border-color: var(--border-hover); transform: translateX(3px); }
+    .error-row-item.severity-error { border-left: 3px solid var(--danger); }
+    .error-row-item.severity-warning { border-left: 3px solid var(--warning); }
+    .error-row-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 0.05rem; }
+    .error-row-body { flex: 1; min-width: 0; }
+    .error-row-type { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .severity-error .error-row-type { color: var(--danger); }
+    .severity-warning .error-row-type { color: var(--warning); }
+    .error-row-desc { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.4; }
+    .error-row-fix { font-size: 0.78rem; color: var(--success); margin-top: 0.25rem; }
+    .error-row-fix::before { content: '💡 Fix: '; font-weight: 600; }
+    .error-row-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.35rem; }
+    .error-row-meta span {
+      font-size: 0.7rem; font-family: var(--font-mono);
+      padding: 0.1rem 0.45rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+    }
+    .filter-tabs { display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .filter-tab {
+      padding: 0.35rem 0.85rem;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border);
+      background: var(--bg-card); color: var(--text-muted);
+      transition: all var(--transition-fast); font-family: var(--font-main);
+    }
+    .filter-tab:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+    .filter-tab.active { background: var(--gradient-primary); color: white; border-color: transparent; }
+    .filter-tab.error-tab.active { background: var(--gradient-danger); }
+    .filter-tab.warning-tab.active { background: linear-gradient(135deg,#FF8C00,#D97700); }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
+<nav class="ev-navbar">
+  <a href="index.html" class="ev-navbar-brand">
+    <div class="brand-icon">📊</div>
+    <span>EduVerify</span>
+  </a>
+  <div class="ev-nav-actions">
+    <a href="index.html" class="ev-nav-link">🏠 Home</a>
+    <a href="validate.html" class="ev-nav-link active">🔍 Validate</a>
+    <a href="generate.html" class="ev-nav-link">🏗️ Generate</a>
+    <button class="ev-theme-toggle" id="themeToggle" title="Toggle theme"></button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════ APP ═══════════════════════ -->
+<div class="app-section">
+<div class="ev-container ev-page-content">
+
+  <!-- Breadcrumb -->
+  <nav class="ev-breadcrumb">
+    <a href="index.html" class="ev-breadcrumb-item">Home</a>
+    <span class="ev-breadcrumb-sep">›</span>
+    <span class="ev-breadcrumb-item active">Excel Validation</span>
+  </nav>
+
+  <!-- Step Indicator -->
+  <div class="ev-steps animate-fadeInUp" id="stepIndicator" style="max-width:680px;margin:0 auto 2.5rem">
+    <div class="ev-step active" id="step1">
+      <div class="ev-step-circle">1</div>
+      <div class="ev-step-label">Upload Excel</div>
+    </div>
+    <div class="ev-step" id="step2">
+      <div class="ev-step-circle">2</div>
+      <div class="ev-step-label">Enter Details</div>
+    </div>
+    <div class="ev-step" id="step3">
+      <div class="ev-step-circle">3</div>
+      <div class="ev-step-label">Validate</div>
+    </div>
+    <div class="ev-step" id="step4">
+      <div class="ev-step-circle">4</div>
+      <div class="ev-step-label">View Report</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- LEFT COLUMN -->
+    <div>
+
+      <!-- ── STEP 1: Upload ── -->
+      <div id="uploadSection">
+        <div class="ev-section-header">
+          <div class="ev-section-title">
+            <div class="ev-section-title-icon" style="background:rgba(67,97,238,0.15)">📤</div>
+            Step 1: Upload Feedback Excel
+          </div>
+          <div class="ev-section-sub">Supports .xlsx, .xls, and .csv files</div>
+        </div>
+
+        <!-- Missing columns alert -->
+        <div id="missingColsAlert" class="ev-alert ev-alert-danger hidden mb-2">
+          <strong>❌ Invalid Format — Missing Required Columns</strong>
+          <div style="margin-top:0.4rem;font-size:0.83rem">Your file is missing:</div>
+          <ul id="missingColsList" style="margin:0.3rem 0 0 1.2rem;font-size:0.82rem;color:var(--danger)"></ul>
+          <div style="font-size:0.77rem;color:var(--text-muted);margin-top:0.4rem">Check the "Required Columns" card on the right for the exact column names.</div>
+        </div>
+
+        <!-- Drop Zone -->
+        <div class="ev-upload-zone" id="dropZone" role="button" tabindex="0">
+          <span class="ev-upload-icon" id="uploadIcon">📤</span>
+          <div class="ev-upload-title" id="uploadTitle">Drag & Drop your Excel file here</div>
+          <p class="ev-upload-sub">Supports <strong>.xlsx</strong>, <strong>.xls</strong>, and <strong>.csv</strong> · Max 50MB</p>
+          <button class="ev-btn ev-btn-primary" id="browseBtn" type="button">📁 Browse File</button>
+          <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.75rem">❌ PDF, images, ZIP files are not accepted</p>
+          <input type="file" id="fileInput" accept=".csv,.xls,.xlsx" style="display:none" />
+        </div>
+
+        <!-- Progress -->
+        <div id="uploadProgress" class="hidden mt-1">
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.3rem">
+            <span id="progressText">Reading file…</span>
+          </div>
+          <div class="ev-progress"><div class="ev-progress-bar" id="progressBar" style="width:0%"></div></div>
+        </div>
+
+        <!-- File info -->
+        <div id="fileInfo" class="ev-file-info hidden">
+          <div class="ev-file-icon">📊</div>
+          <div class="ev-file-details">
+            <div class="ev-file-name" id="fileName">—</div>
+            <div class="ev-file-meta">
+              <span id="fileSize">—</span> ·
+              <span id="fileRows">—</span> rows ·
+              Loaded at <span id="fileTime">—</span>
+            </div>
+            <div class="ev-file-badge">✅ Ready to Validate</div>
+          </div>
+          <button class="ev-btn ev-btn-ghost ev-btn-sm" id="removeFileBtn" title="Remove file">✕</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: Admin Form ── -->
+      <div id="adminSection" class="hidden mt-3">
+        <div class="ev-section-header">
+          <div class="ev-section-title">
+            <div class="ev-section-title-icon" style="background:rgba(114,9,183,0.15)">⚙️</div>
+            Step 2: Enter Validation Parameters
+          </div>
+          <div class="ev-section-sub">Tell us what to expect in the file</div>
+        </div>
+        <div class="ev-card">
+          <form id="adminForm" novalidate>
+            <div class="ev-grid-2">
+              <div class="ev-form-group">
+                <label class="ev-label" for="expectedStudents">
+                  Expected Student Count *
+                  <span style="cursor:help;opacity:0.7" title="Total unique students that should be in the file"> ⓘ</span>
+                </label>
+                <input class="ev-input font-mono" type="number" id="expectedStudents"
+                  placeholder="e.g. 60" min="1" max="1000" />
+                <div class="ev-form-feedback"></div>
+              </div>
+              <div class="ev-form-group">
+                <label class="ev-label" for="expectedSubjects">
+                  Expected Subjects Per Student *
+                  <span style="cursor:help;opacity:0.7" title="Number of subjects each student should have"> ⓘ</span>
+                </label>
+                <input class="ev-input font-mono" type="number" id="expectedSubjects"
+                  placeholder="e.g. 9" min="1" max="50" />
+                <div class="ev-form-feedback"></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:0.75rem;margin-top:1.25rem;flex-wrap:wrap">
+              <button type="button" class="ev-btn ev-btn-ghost" id="previewBtn">👁️ Preview Table</button>
+              <button type="button" class="ev-btn ev-btn-primary ev-btn-lg" id="validateBtn" style="flex:1">
+                🚀 Run Validation
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: Preview Panel ── -->
+      <div id="previewSection" class="hidden mt-3">
+        <div class="ev-section-header">
+          <div class="ev-section-title">
+            <div class="ev-section-title-icon" style="background:rgba(255,140,0,0.15)">👁️</div>
+            Data Preview (first 30 rows)
+          </div>
+        </div>
+        <div class="ev-card" style="padding:0;overflow:hidden">
+          <div class="preview-table-wrap" id="previewTableWrap"></div>
+        </div>
+        <div style="text-align:right;margin-top:0.5rem">
+          <button class="ev-btn ev-btn-ghost ev-btn-sm" id="hidePreviewBtn">✕ Close Preview</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 4: Results ── -->
+      <div id="resultsSection" class="hidden mt-3">
+
+        <!-- Banner -->
+        <div id="resultBanner" class="result-banner"></div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <!-- Error List -->
+        <div class="ev-section-header">
+          <div class="ev-section-title">
+            <div class="ev-section-title-icon" style="background:rgba(239,35,60,0.12)">📋</div>
+            Validation Issues
+          </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all" onclick="filterErrors('all', this)">All</button>
+          <button class="filter-tab error-tab" data-filter="error" onclick="filterErrors('error', this)">🔴 Errors <span id="errorCount">0</span></button>
+          <button class="filter-tab warning-tab" data-filter="warning" onclick="filterErrors('warning', this)">⚠️ Warnings <span id="warningCount">0</span></button>
+        </div>
+
+        <div id="errorList"></div>
+
+        <!-- Download Report -->
+        <div class="ev-section-header mt-3">
+          <div class="ev-section-title">
+            <div class="ev-section-title-icon" style="background:rgba(46,196,182,0.12)">📥</div>
+            Download Report
+          </div>
+        </div>
+        <div class="download-grid">
+          <button class="download-btn" id="dlExcel">
+            <span class="dl-icon">📊</span>
+            Excel (.xlsx)
+          </button>
+          <button class="download-btn" id="dlCsv">
+            <span class="dl-icon">📄</span>
+            CSV (.csv)
+          </button>
+          <button class="download-btn" id="dlJson">
+            <span class="dl-icon">🗂️</span>
+            JSON (.json)
+          </button>
+        </div>
+
+        <!-- Re-validate -->
+        <div style="margin-top:1.5rem;display:flex;gap:0.75rem">
+          <button class="ev-btn ev-btn-ghost" id="revalidateBtn">🔄 Re-validate</button>
+          <button class="ev-btn ev-btn-ghost" id="newFileBtn">📤 Upload New File</button>
+        </div>
+
+      </div>
+
+    </div><!-- /LEFT -->
+
+    <!-- RIGHT: Sidebar -->
+    <div class="sidebar">
+
+      <!-- How It Works -->
+      <div class="ev-card">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.85rem">📖 How It Works</div>
+        <div style="display:flex;flex-direction:column;gap:0.75rem">
+          <div class="info-row">
+            <div class="info-row-icon">1️⃣</div>
+            <div class="info-row-text"><strong>Upload</strong> your .xlsx / .xls / .csv feedback file</div>
+          </div>
+          <div class="info-row">
+            <div class="info-row-icon">2️⃣</div>
+            <div class="info-row-text"><strong>Enter</strong> the expected student count and subjects per student</div>
+          </div>
+          <div class="info-row">
+            <div class="info-row-icon">3️⃣</div>
+            <div class="info-row-text"><strong>Run Validation</strong> — all rules check instantly in your browser</div>
+          </div>
+          <div class="info-row">
+            <div class="info-row-icon">4️⃣</div>
+            <div class="info-row-text"><strong>Download</strong> the error report and fix your file</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Required Columns -->
+      <div class="ev-card">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.75rem">📋 Required Columns (11)</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.6rem">Your Excel must have exactly these column headers:</div>
+        <div class="col-tags">
+          <span class="col-tag">department</span>
+          <span class="col-tag">roll_number</span>
+          <span class="col-tag">student_name</span>
+          <span class="col-tag">staff_id</span>
+          <span class="col-tag">staff_name</span>
+          <span class="col-tag">subject_code</span>
+          <span class="col-tag">subject_name</span>
+          <span class="col-tag">section</span>
+          <span class="col-tag">year</span>
+          <span class="col-tag">batch</span>
+          <span class="col-tag">academic_year</span>
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.75rem">Column names are case-insensitive and spaces are treated as underscores.</div>
+      </div>
+
+      <!-- Validation Rules -->
+      <div class="ev-card">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.75rem">✅ What We Check</div>
+        <div style="display:flex;flex-direction:column;gap:0.3rem;font-size:0.78rem;color:var(--text-muted)">
+          <div>🔴 Empty file check</div>
+          <div>🔴 Missing required columns</div>
+          <div>🔴 Blank cells in any column</div>
+          <div>🔴 Exact duplicate rows</div>
+          <div>🔴 Duplicate student + subject</div>
+          <div>🔴 Student count mismatch</div>
+          <div>🔴 Too few subjects per student</div>
+          <div>⚠️ Too many subjects per student</div>
+          <div>🔴 Roll number → name conflict</div>
+          <div>🔴 Staff ID → name conflict</div>
+          <div>🔴 Subject code → name conflict</div>
+          <div>⚠️ Invalid roll number format</div>
+        </div>
+      </div>
+
+      <!-- Privacy -->
+      <div class="ev-card">
+        <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.5">
+          <div style="font-weight:700;color:var(--text-secondary);margin-bottom:0.3rem">🔒 Privacy First</div>
+          Your file is processed entirely in your browser. No data is uploaded to any server.
+        </div>
+      </div>
+
+    </div><!-- /RIGHT -->
+
+  </div><!-- /main-grid -->
+
+</div><!-- /container -->
+</div><!-- /app-section -->
+
+<!-- SheetJS CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/validate.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const { ThemeManager, Toast, Loader, Dom, Format, Session, ExcelReader } = window.EV;
+  ThemeManager.init();
+
+  let parsedRows = null;
+  let validationResult = null;
+
+  /* ── Step Indicator ─────────────────────────────────────── */
+  const setStep = (n) => {
+    document.querySelectorAll('.ev-step').forEach((el, i) => {
+      el.classList.remove('active', 'completed');
+      if (i + 1 < n) el.classList.add('completed');
+      if (i + 1 === n) el.classList.add('active');
+    });
+  };
+  setStep(1);
+
+  /* ── Drag & Drop ────────────────────────────────────────── */
+  const dropZone = Dom.get('dropZone');
+  const fileInput = Dom.get('fileInput');
+  const ALLOWED = ['.csv', '.xls', '.xlsx'];
+
+  ['dragenter','dragover','dragleave','drop'].forEach(e => {
+    dropZone.addEventListener(e, ev => { ev.preventDefault(); ev.stopPropagation(); });
+    document.body.addEventListener(e, ev => ev.preventDefault());
+  });
+  ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.add('drag-over')));
+  ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.remove('drag-over')));
+
+  dropZone.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+  dropZone.addEventListener('click', () => { if (!parsedRows) fileInput.click(); });
+  Dom.get('browseBtn').addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+  /* ── Handle File ────────────────────────────────────────── */
+  const handleFile = async (file) => {
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (!ALLOWED.includes(ext)) {
+      Toast.error(`"${ext}" files are not supported. Use .xlsx, .xls, or .csv.`);
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      Toast.error('File exceeds 50MB limit.');
+      return;
+    }
+
+    Dom.show('uploadProgress');
+    Dom.hide('fileInfo');
+    Dom.hide('missingColsAlert');
+    Dom.hide('adminSection');
+    Dom.hide('resultsSection');
+    Dom.hide('previewSection');
+    Dom.get('progressBar').style.width = '20%';
+    Dom.setText('progressText', 'Reading file…');
+
+    try {
+      Dom.get('progressBar').style.width = '50%';
+      const { rows } = await ExcelReader.read(file);
+      Dom.get('progressBar').style.width = '80%';
+      const normalized = ExcelReader.normalizeRows(rows);
+      Dom.get('progressBar').style.width = '100%';
+      Dom.setText('progressText', 'Done!');
+
+      await new Promise(r => setTimeout(r, 300));
+      Dom.hide('uploadProgress');
+
+      // Check for missing columns
+      const missing = EVValidate.MANDATORY_COLS.filter(col => !normalized.length || !(col in normalized[0]));
+      if (missing.length > 0 && normalized.length > 0) {
+        Dom.show('missingColsAlert');
+        Dom.get('missingColsList').innerHTML = missing.map(c => `<li><code>${c}</code></li>`).join('');
+        Toast.error('File is missing required columns. See the list below.');
+        parsedRows = null;
+        return;
+      }
+
+      parsedRows = normalized;
+
+      // Show file info
+      Dom.show('fileInfo');
+      dropZone.classList.add('has-file');
+      Dom.setText('uploadIcon', '📊');
+      Dom.setText('uploadTitle', 'File Loaded Successfully!');
+      Dom.setText('fileName', file.name);
+      Dom.setText('fileSize', Format.fileSize(file.size));
+      Dom.setText('fileRows', Format.number(normalized.length));
+      Dom.setText('fileTime', Format.time());
+      Dom.show('adminSection');
+      setStep(2);
+
+      Toast.success(`✅ "${file.name}" loaded — ${Format.number(normalized.length)} rows detected.`);
+      setTimeout(() => Dom.get('adminSection').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+
+    } catch (err) {
+      Dom.hide('uploadProgress');
+      parsedRows = null;
+      Toast.error('Failed to read file: ' + err.message);
+    }
+  };
+
+  /* ── Remove File ────────────────────────────────────────── */
+  Dom.get('removeFileBtn').addEventListener('click', () => {
+    parsedRows = null;
+    validationResult = null;
+    fileInput.value = '';
+    Dom.hide('fileInfo');
+    Dom.hide('adminSection');
+    Dom.hide('resultsSection');
+    Dom.hide('previewSection');
+    Dom.hide('missingColsAlert');
+    dropZone.classList.remove('has-file');
+    Dom.setText('uploadIcon', '📤');
+    Dom.setText('uploadTitle', 'Drag & Drop your Excel file here');
+    setStep(1);
+    Toast.info('File removed.');
+  });
+
+  /* ── Input Sanitization ─────────────────────────────────── */
+  ['expectedStudents','expectedSubjects'].forEach(id => {
+    Dom.get(id)?.addEventListener('input', e => {
+      e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    });
+  });
+
+  /* ── Form Validation ────────────────────────────────────── */
+  const validateField = (id, label, min, max) => {
+    const el = Dom.get(id);
+    if (!el) return true;
+    const val = el.value.trim();
+    const fb = el.parentElement.querySelector('.ev-form-feedback');
+    let err = null;
+    if (!val) err = `${label} is required.`;
+    else {
+      const n = parseInt(val);
+      if (isNaN(n) || n < min || n > max) err = `${label} must be between ${min} and ${max}.`;
+    }
+    if (err) {
+      el.classList.add('is-invalid'); el.classList.remove('is-valid');
+      if (fb) { fb.textContent = err; fb.className = 'ev-form-feedback error'; }
+      return false;
+    }
+    el.classList.remove('is-invalid'); el.classList.add('is-valid');
+    if (fb) { fb.textContent = ''; fb.className = 'ev-form-feedback'; }
+    return true;
+  };
+  Dom.get('expectedStudents')?.addEventListener('blur', () => validateField('expectedStudents','Expected Students',1,1000));
+  Dom.get('expectedSubjects')?.addEventListener('blur', () => validateField('expectedSubjects','Expected Subjects',1,50));
+
+  /* ── Preview Button ─────────────────────────────────────── */
+  Dom.get('previewBtn').addEventListener('click', () => {
+    if (!parsedRows) { Toast.error('Upload a file first.'); return; }
+    const preview = parsedRows.slice(0, 30);
+    const cols = EVValidate.MANDATORY_COLS;
+    const th = cols.map(c => `<th>${c.replace(/_/g,' ')}</th>`).join('');
+    const rows = preview.map(row =>
+      `<tr>${cols.map(c => `<td title="${row[c]||''}">${row[c]||''}</td>`).join('')}</tr>`
+    ).join('');
+    Dom.get('previewTableWrap').innerHTML = `<table class="preview-table"><thead><tr><th>#</th>${th}</tr></thead><tbody>${
+      preview.map((row, i) => `<tr><td style="color:var(--text-muted);font-family:var(--font-mono)">${i+2}</td>${cols.map(c=>`<td>${row[c]||''}</td>`).join('')}</tr>`).join('')
+    }</tbody></table>`;
+    Dom.show('previewSection');
+    Dom.get('previewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  Dom.get('hidePreviewBtn').addEventListener('click', () => Dom.hide('previewSection'));
+
+  /* ── Validate Button ────────────────────────────────────── */
+  Dom.get('validateBtn').addEventListener('click', () => {
+    if (!parsedRows) { Toast.error('Upload a file first.'); return; }
+    const v1 = validateField('expectedStudents','Expected Students',1,1000);
+    const v2 = validateField('expectedSubjects','Expected Subjects',1,50);
+    if (!v1 || !v2) { Toast.error('Please fill in all required fields.'); return; }
+
+    const adminInputs = {
+      expectedStudents: Dom.get('expectedStudents').value,
+      expectedSubjects: Dom.get('expectedSubjects').value
+    };
+
+    Loader.show('Running validation rules…');
+    setStep(3);
+
+    setTimeout(() => {
+      try {
+        Loader.updateMessage('Checking 10+ validation rules…');
+        validationResult = EVValidate.runValidation(parsedRows, adminInputs);
+        Loader.hide();
+        renderResults(validationResult);
+        setStep(4);
+        Dom.get('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        Toast.success('Validation complete!');
+      } catch (err) {
+        Loader.hide();
+        setStep(2);
+        Toast.error('Validation error: ' + err.message);
+      }
+    }, 100);
+  });
+
+  /* ── Render Results ─────────────────────────────────────── */
+  const renderResults = (result) => {
+    Dom.show('resultsSection');
+    const { summary, errors, isReady } = result;
+
+    // Banner
+    Dom.get('resultBanner').className = `result-banner ${isReady ? 'ready' : 'not-ready'} animate-fadeInUp`;
+    Dom.get('resultBanner').innerHTML = `
+      <div class="result-banner-icon">${isReady ? '✅' : '❌'}</div>
+      <div>
+        <div class="result-banner-title">${result.overallStatus}</div>
+        <div class="result-banner-sub">${
+          isReady
+            ? `No errors found in ${Format.number(summary.totalRows)} rows. The file is ready for upload.`
+            : `Found ${summary.totalErrors} error(s) and ${summary.totalWarnings} warning(s). Fix them before uploading.`
+        }</div>
+      </div>`;
+
+    // Stats
+    Dom.get('statsGrid').innerHTML = [
+      { label: 'Total Rows', val: Format.number(summary.totalRows), cls: '' },
+      { label: 'Unique Students', val: Format.number(summary.uniqueStudents), cls: '' },
+      { label: 'Errors Found', val: summary.totalErrors, cls: summary.totalErrors > 0 ? 'danger' : 'success' },
+      { label: 'Warnings', val: summary.totalWarnings, cls: summary.totalWarnings > 0 ? 'warning' : '' },
+      { label: 'Blank Cells', val: summary.blankCells, cls: summary.blankCells > 0 ? 'danger' : '' },
+      { label: 'Duplicate Rows', val: summary.duplicateRows, cls: summary.duplicateRows > 0 ? 'danger' : '' },
+    ].map(s => `
+      <div class="stat-card">
+        <div class="stat-val ${s.cls}">${s.val}</div>
+        <div class="stat-label">${s.label}</div>
+      </div>`).join('');
+
+    // Error count badges
+    Dom.setText('errorCount', `(${summary.totalErrors})`);
+    Dom.setText('warningCount', `(${summary.totalWarnings})`);
+
+    // Error list
+    renderErrorList(errors, 'all');
+  };
+
+  const renderErrorList = (errors, filter) => {
+    const filtered = filter === 'all' ? errors : errors.filter(e => e.severity === filter);
+    const el = Dom.get('errorList');
+    if (!filtered.length) {
+      el.innerHTML = `<div class="ev-alert ev-alert-success"><strong>✅ No ${filter === 'all' ? '' : filter + ' '}issues found!</strong></div>`;
+      return;
+    }
+    el.innerHTML = filtered.map(e => `
+      <div class="error-row-item severity-${e.severity}">
+        <div class="error-row-icon">${e.severity === 'error' ? '🔴' : '⚠️'}</div>
+        <div class="error-row-body">
+          <div class="error-row-type">${e.errorType}</div>
+          <div class="error-row-desc">${e.description}</div>
+          <div class="error-row-fix">${e.suggestedFix}</div>
+          <div class="error-row-meta">
+            ${e.rowNumber ? `<span>Row ${e.rowNumber}</span>` : ''}
+            ${e.columnName ? `<span>${e.columnName}</span>` : ''}
+            ${e.rollNumber ? `<span>${e.rollNumber}</span>` : ''}
+            ${e.studentName ? `<span>${e.studentName}</span>` : ''}
+            <span>Rule ${e.ruleId}</span>
+          </div>
+        </div>
+      </div>`).join('');
+  };
+
+  /* ── Filter Errors ──────────────────────────────────────── */
+  window.filterErrors = (filter, btn) => {
+    if (!validationResult) return;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderErrorList(validationResult.errors, filter);
+  };
+
+  /* ── Download Buttons ───────────────────────────────────── */
+  Dom.get('dlExcel').addEventListener('click', () => {
+    if (!validationResult) return;
+    EVValidate.buildExcelReport(validationResult, 'EduVerify_Validation_Report.xlsx');
+    Toast.success('Excel report downloaded!');
+  });
+  Dom.get('dlCsv').addEventListener('click', () => {
+    if (!validationResult) return;
+    EVValidate.buildCsvReport(validationResult, 'EduVerify_Validation_Report.csv');
+    Toast.success('CSV report downloaded!');
+  });
+  Dom.get('dlJson').addEventListener('click', () => {
+    if (!validationResult) return;
+    EVValidate.buildJsonReport(validationResult, 'EduVerify_Validation_Report.json');
+    Toast.success('JSON report downloaded!');
+  });
+
+  /* ── Re-validate / New File ─────────────────────────────── */
+  Dom.get('revalidateBtn').addEventListener('click', () => {
+    Dom.hide('resultsSection');
+    Dom.get('adminSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setStep(2);
+  });
+  Dom.get('newFileBtn').addEventListener('click', () => {
+    Dom.get('removeFileBtn').click();
+  });
+
+});
+</script>
+</body>
+</html>

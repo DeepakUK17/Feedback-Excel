@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Excel Generation — EduVerify</title>
+  <meta name="description" content="Generate a perfectly formatted college feedback Excel file from your student list and staff course details." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
+<nav class="ev-navbar">
+  <a href="index.html" class="ev-navbar-brand">
+    <div class="brand-icon">📊</div>
+    <span>EduVerify</span>
+  </a>
+  <div class="ev-nav-actions">
+    <a href="index.html" class="ev-nav-link">🏠 Home</a>
+    <a href="validate.html" class="ev-nav-link">🔍 Validate</a>
+    <a href="generate.html" class="ev-nav-link active">🏗️ Generate</a>
+    <button class="ev-theme-toggle" id="themeToggle" title="Toggle theme"></button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════ APP ═══════════════════════ -->
+<div class="app-section">
+<div class="ev-container ev-page-content">
+
+  <!-- Breadcrumb -->
+  <nav class="ev-breadcrumb">
+    <a href="index.html" class="ev-breadcrumb-item">Home</a>
+    <span class="ev-breadcrumb-sep">›</span>
+    <span class="ev-breadcrumb-item active">Excel Generation</span>
+  </nav>
+
+  <!-- Page Header -->
+  <div style="margin-bottom:2rem">
+    <h1 style="font-size:clamp(1.5rem,3vw,2.25rem);margin-bottom:0.4rem">
+      🏗️ Generate Feedback <span class="text-gradient">Excel</span>
+    </h1>
+    <p style="color:var(--text-muted);font-size:0.9rem">
+      Upload your student list and staff/course details — we'll generate a perfect Excel matching the required format.
+    </p>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- LEFT: Upload Steps -->
+    <div>
+
+      <!-- ══ STEP 1: Student List ══ -->
+      <div class="gen-step-item active" id="genStep1">
+        <div class="gen-step-num">1</div>
+        <div class="gen-step-body">
+          <div class="gen-step-title">📋 Upload Student List Excel</div>
+          <div class="gen-step-desc">Must contain: <code style="font-size:0.78rem;color:var(--primary-light)">roll_number</code>, <code style="font-size:0.78rem;color:var(--primary-light)">student_name</code></div>
+
+          <div style="margin-top:1rem">
+            <div class="ev-upload-zone" id="studentDropZone" style="padding:1.5rem">
+              <span class="ev-upload-icon" id="studentIcon" style="font-size:2rem">📋</span>
+              <div class="ev-upload-title" id="studentTitle" style="font-size:0.95rem">Drop student list here or</div>
+              <button class="ev-btn ev-btn-ghost ev-btn-sm" id="studentBrowseBtn" type="button">Browse</button>
+              <input type="file" id="studentFileInput" accept=".csv,.xls,.xlsx" style="display:none" />
+            </div>
+            <div id="studentFileInfo" class="ev-file-info hidden">
+              <div class="ev-file-icon">📋</div>
+              <div class="ev-file-details">
+                <div class="ev-file-name" id="studentFileName">—</div>
+                <div class="ev-file-meta"><span id="studentRowCount">—</span> students</div>
+                <div class="ev-file-badge">✅ Loaded</div>
+              </div>
+              <button class="ev-btn ev-btn-ghost ev-btn-sm" id="removeStudentBtn">✕</button>
+            </div>
+            <div id="studentError" class="ev-alert ev-alert-danger hidden mt-1">
+              <strong>❌ Column Error</strong>
+              <div id="studentErrorMsg" style="font-size:0.82rem;margin-top:0.3rem"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ STEP 2: Staff / Course ══ -->
+      <div class="gen-step-item" id="genStep2">
+        <div class="gen-step-num">2</div>
+        <div class="gen-step-body">
+          <div class="gen-step-title">👨‍🏫 Upload Staff & Course Excel</div>
+          <div class="gen-step-desc">
+            Must contain: <code style="font-size:0.78rem;color:var(--primary-light)">staff_id</code>,
+            <code style="font-size:0.78rem;color:var(--primary-light)">staff_name</code>,
+            <code style="font-size:0.78rem;color:var(--primary-light)">subject_code</code>,
+            <code style="font-size:0.78rem;color:var(--primary-light)">subject_name</code>,
+            <code style="font-size:0.78rem;color:var(--primary-light)">department</code>,
+            <code style="font-size:0.78rem;color:var(--primary-light)">section</code>,
+            <code style="font-size:0.78rem;color:var(--primary-light)">year</code>,
+            <code style="font-size:0.78rem;color:var(--primary-light)">batch</code>,
+            <code style="font-size:0.78rem;color:var(--primary-light)">academic_year</code>
+          </div>
+
+          <div style="margin-top:1rem">
+            <div class="ev-upload-zone" id="staffDropZone" style="padding:1.5rem">
+              <span class="ev-upload-icon" id="staffIcon" style="font-size:2rem">👨‍🏫</span>
+              <div class="ev-upload-title" id="staffTitle" style="font-size:0.95rem">Drop staff/course Excel here or</div>
+              <button class="ev-btn ev-btn-ghost ev-btn-sm" id="staffBrowseBtn" type="button">Browse</button>
+              <input type="file" id="staffFileInput" accept=".csv,.xls,.xlsx" style="display:none" />
+            </div>
+            <div id="staffFileInfo" class="ev-file-info hidden">
+              <div class="ev-file-icon">👨‍🏫</div>
+              <div class="ev-file-details">
+                <div class="ev-file-name" id="staffFileName">—</div>
+                <div class="ev-file-meta"><span id="staffRowCount">—</span> subjects/staff entries</div>
+                <div class="ev-file-badge">✅ Loaded</div>
+              </div>
+              <button class="ev-btn ev-btn-ghost ev-btn-sm" id="removeStaffBtn">✕</button>
+            </div>
+            <div id="staffError" class="ev-alert ev-alert-danger hidden mt-1">
+              <strong>❌ Column Error</strong>
+              <div id="staffErrorMsg" style="font-size:0.82rem;margin-top:0.3rem"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ STEP 3: Generate ══ -->
+      <div class="gen-step-item" id="genStep3">
+        <div class="gen-step-num">3</div>
+        <div class="gen-step-body">
+          <div class="gen-step-title">⚡ Preview & Generate</div>
+          <div class="gen-step-desc">Review the generated data and download your feedback Excel</div>
+
+          <div style="margin-top:1rem" id="generateActions">
+            <div id="generationInfo" class="hidden ev-alert ev-alert-info mb-2">
+              <strong id="genInfoTitle">Ready to generate</strong>
+              <div id="genInfoDetail" style="font-size:0.82rem;margin-top:0.25rem"></div>
+            </div>
+
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.5rem">
+              <button class="ev-btn ev-btn-ghost" id="previewGenerateBtn" disabled>
+                👁️ Preview Data
+              </button>
+              <button class="ev-btn ev-btn-primary ev-btn-lg" id="generateBtn" disabled style="flex:1">
+                📊 Generate & Download Excel
+              </button>
+            </div>
+            <div style="margin-top:0.5rem;display:flex;gap:0.5rem">
+              <button class="ev-btn ev-btn-ghost ev-btn-sm" id="downloadCsvBtn" disabled>📄 Download CSV</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview Table -->
+      <div id="previewSection" class="hidden mt-3">
+        <div class="ev-section-header">
+          <div class="ev-section-title">
+            <div class="ev-section-title-icon" style="background:rgba(46,196,182,0.12)">👁️</div>
+            Data Preview
+          </div>
+        </div>
+        <div class="ev-card" style="padding:0;overflow:hidden">
+          <div class="preview-table-wrap" id="previewTableWrap"></div>
+        </div>
+        <div style="text-align:right;margin-top:0.5rem">
+          <button class="ev-btn ev-btn-ghost ev-btn-sm" id="hidePreviewBtn">✕ Close</button>
+        </div>
+      </div>
+
+    </div><!-- /LEFT -->
+
+    <!-- RIGHT: Sidebar -->
+    <div class="sidebar">
+
+      <!-- Excel Format Guide -->
+      <div class="ev-card">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:1rem">📖 Input File Formats</div>
+
+        <div style="font-size:0.78rem;font-weight:700;color:var(--primary-light);margin-bottom:0.4rem">📋 Student List Excel</div>
+        <div class="col-tags mb-2">
+          <span class="col-tag required">roll_number</span>
+          <span class="col-tag required">student_name</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:1rem">Each row = one student. Extra columns are ignored.</div>
+
+        <div style="font-size:0.78rem;font-weight:700;color:var(--success);margin-bottom:0.4rem">👨‍🏫 Staff / Course Excel</div>
+        <div class="col-tags mb-2">
+          <span class="col-tag required">staff_id</span>
+          <span class="col-tag required">staff_name</span>
+          <span class="col-tag required">subject_code</span>
+          <span class="col-tag required">subject_name</span>
+          <span class="col-tag required">department</span>
+          <span class="col-tag required">section</span>
+          <span class="col-tag required">year</span>
+          <span class="col-tag required">batch</span>
+          <span class="col-tag required">academic_year</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-muted)">Each row = one subject taught by one staff member. Extra columns are ignored.</div>
+      </div>
+
+      <!-- Output Format -->
+      <div class="ev-card">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.75rem">📊 Output Format</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.6rem">Generated Excel will have these 11 columns (matching Good.xlsx):</div>
+        <div class="col-tags">
+          <span class="col-tag">department</span>
+          <span class="col-tag">roll_number</span>
+          <span class="col-tag">student_name</span>
+          <span class="col-tag">staff_id</span>
+          <span class="col-tag">staff_name</span>
+          <span class="col-tag">subject_code</span>
+          <span class="col-tag">subject_name</span>
+          <span class="col-tag">section</span>
+          <span class="col-tag">year</span>
+          <span class="col-tag">batch</span>
+          <span class="col-tag">academic_year</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.75rem">
+          Formula: <strong style="color:var(--text-secondary)">Total rows = Students × Subjects</strong><br/>
+          Example: 60 students × 9 subjects = 540 rows
+        </div>
+      </div>
+
+      <!-- How It Works -->
+      <div class="ev-card">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.75rem">⚡ How It Works</div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem">
+          <div class="info-row">
+            <div class="info-row-icon">1️⃣</div>
+            <div class="info-row-text">Upload student list Excel (roll numbers + names)</div>
+          </div>
+          <div class="info-row">
+            <div class="info-row-icon">2️⃣</div>
+            <div class="info-row-text">Upload staff/course Excel (all subject details)</div>
+          </div>
+          <div class="info-row">
+            <div class="info-row-icon">3️⃣</div>
+            <div class="info-row-text">We cross-join each student with each subject automatically</div>
+          </div>
+          <div class="info-row">
+            <div class="info-row-icon">4️⃣</div>
+            <div class="info-row-text">Download the perfect .xlsx file, ready to upload</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Privacy -->
+      <div class="ev-card">
+        <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.5">
+          <div style="font-weight:700;color:var(--text-secondary);margin-bottom:0.3rem">🔒 Privacy First</div>
+          Your files never leave your device. All generation happens in the browser with no server.
+        </div>
+      </div>
+
+    </div><!-- /RIGHT -->
+
+  </div><!-- /main-grid -->
+
+</div>
+</div>
+
+<!-- SheetJS CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/generate.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const { ThemeManager, Toast, Loader, Dom, Format, ExcelReader } = window.EV;
+  ThemeManager.init();
+
+  let studentRows = null;
+  let staffRows   = null;
+  let generatedRows = null;
+
+  /* ── Generic file upload handler ─────────────────────────── */
+  const setupUpload = (dropZoneId, inputId, browseBtnId, fileInfoId, fileNameId, rowCountId, removeId, errorId, errorMsgId, iconId, titleId, onLoad) => {
+    const dropZone = Dom.get(dropZoneId);
+    const fileInput = Dom.get(inputId);
+    const ALLOWED = ['.csv', '.xls', '.xlsx'];
+
+    const process = async (file) => {
+      const ext = '.' + file.name.split('.').pop().toLowerCase();
+      if (!ALLOWED.includes(ext)) { Toast.error(`"${ext}" not supported. Use .xlsx, .xls, or .csv.`); return; }
+      try {
+        Dom.hide(errorId);
+        const { rows } = await ExcelReader.read(file);
+        const normalized = ExcelReader.normalizeRows(rows);
+        const result = onLoad(normalized, file);
+        if (!result.ok) {
+          Dom.show(errorId);
+          Dom.setText(errorMsgId, result.error);
+          return;
+        }
+        Dom.show(fileInfoId);
+        Dom.setText(fileNameId, file.name);
+        Dom.setText(rowCountId, Format.number(normalized.length));
+        Dom.setText(iconId, '✅');
+        Dom.setText(titleId, 'File Loaded!');
+        dropZone.classList.add('has-file');
+        Toast.success(`✅ "${file.name}" loaded.`);
+        checkReady();
+      } catch (err) {
+        Toast.error('Failed to read file: ' + err.message);
+      }
+    };
+
+    ['dragenter','dragover','dragleave','drop'].forEach(e => {
+      dropZone.addEventListener(e, ev => { ev.preventDefault(); ev.stopPropagation(); });
+    });
+    ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.add('drag-over')));
+    ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.remove('drag-over')));
+    dropZone.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) process(f); });
+    dropZone.addEventListener('click', () => fileInput.click());
+    Dom.get(browseBtnId).addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+    fileInput.addEventListener('change', () => { if (fileInput.files[0]) process(fileInput.files[0]); });
+
+    Dom.get(removeId)?.addEventListener('click', () => {
+      fileInput.value = '';
+      Dom.hide(fileInfoId);
+      Dom.hide(errorId);
+      dropZone.classList.remove('has-file');
+      Dom.setText(iconId, dropZoneId === 'studentDropZone' ? '📋' : '👨‍🏫');
+      Dom.setText(titleId, dropZoneId === 'studentDropZone' ? 'Drop student list here or' : 'Drop staff/course Excel here or');
+      onLoad(null, null);
+      checkReady();
+    });
+  };
+
+  /* ── Student Upload ──────────────────────────────────────── */
+  setupUpload(
+    'studentDropZone','studentFileInput','studentBrowseBtn',
+    'studentFileInfo','studentFileName','studentRowCount','removeStudentBtn',
+    'studentError','studentErrorMsg','studentIcon','studentTitle',
+    (rows, file) => {
+      if (rows === null) { studentRows = null; return { ok: true }; }
+      const missing = EVGenerate.REQUIRED_STUDENT_COLS.filter(c => !rows.length || !(c in rows[0]));
+      if (missing.length) {
+        studentRows = null;
+        return { ok: false, error: `Missing columns: ${missing.join(', ')}. Your file must have "roll_number" and "student_name" headers.` };
+      }
+      studentRows = rows;
+      // Mark step 1 done
+      Dom.get('genStep1').classList.remove('active'); Dom.get('genStep1').classList.add('done');
+      Dom.get('genStep2').classList.add('active');
+      return { ok: true };
+    }
+  );
+
+  /* ── Staff Upload ────────────────────────────────────────── */
+  setupUpload(
+    'staffDropZone','staffFileInput','staffBrowseBtn',
+    'staffFileInfo','staffFileName','staffRowCount','removeStaffBtn',
+    'staffError','staffErrorMsg','staffIcon','staffTitle',
+    (rows, file) => {
+      if (rows === null) { staffRows = null; return { ok: true }; }
+      const missing = EVGenerate.REQUIRED_STAFF_COLS.filter(c => !rows.length || !(c in rows[0]));
+      if (missing.length) {
+        staffRows = null;
+        return { ok: false, error: `Missing columns: ${missing.join(', ')}. See the "Input File Formats" guide on the right.` };
+      }
+      staffRows = rows;
+      Dom.get('genStep2').classList.remove('active'); Dom.get('genStep2').classList.add('done');
+      Dom.get('genStep3').classList.add('active');
+      return { ok: true };
+    }
+  );
+
+  /* ── Check Ready ─────────────────────────────────────────── */
+  const checkReady = () => {
+    const ready = !!(studentRows && staffRows);
+    Dom.get('generateBtn').disabled = !ready;
+    Dom.get('previewGenerateBtn').disabled = !ready;
+    Dom.get('downloadCsvBtn').disabled = !ready;
+
+    if (ready) {
+      const preview = EVGenerate.generate(studentRows, staffRows);
+      if (preview.ok) {
+        Dom.show('generationInfo');
+        Dom.setText('genInfoTitle', `Ready to generate ${Format.number(preview.stats.totalRows)} rows`);
+        Dom.setText('genInfoDetail',
+          `${preview.stats.students} students × ${preview.stats.subjects} subjects = ${Format.number(preview.stats.totalRows)} total rows`);
+        generatedRows = preview.rows;
+      }
+    } else {
+      Dom.hide('generationInfo');
+      generatedRows = null;
+    }
+  };
+
+  /* ── Preview ─────────────────────────────────────────────── */
+  Dom.get('previewGenerateBtn').addEventListener('click', () => {
+    if (!generatedRows) return;
+    Dom.get('previewTableWrap').innerHTML = EVGenerate.buildPreviewTable(generatedRows, 25);
+    Dom.show('previewSection');
+    Dom.get('previewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  Dom.get('hidePreviewBtn').addEventListener('click', () => Dom.hide('previewSection'));
+
+  /* ── Generate Excel ──────────────────────────────────────── */
+  Dom.get('generateBtn').addEventListener('click', () => {
+    if (!studentRows || !staffRows) { Toast.error('Upload both files first.'); return; }
+    Loader.show('Generating Excel…');
+    setTimeout(() => {
+      try {
+        const result = EVGenerate.generate(studentRows, staffRows);
+        if (!result.ok) { Loader.hide(); Toast.error(result.error); return; }
+        EVGenerate.downloadExcel(result.rows, 'Feedback_Excel.xlsx');
+        Loader.hide();
+        Toast.success(`✅ Downloaded! ${Format.number(result.stats.totalRows)} rows generated.`);
+      } catch (err) {
+        Loader.hide();
+        Toast.error('Generation failed: ' + err.message);
+      }
+    }, 100);
+  });
+
+  /* ── Download CSV ────────────────────────────────────────── */
+  Dom.get('downloadCsvBtn').addEventListener('click', () => {
+    if (!generatedRows) return;
+    EVGenerate.downloadCsv(generatedRows, 'Feedback_Excel.csv');
+    Toast.success('CSV downloaded!');
+  });
+
+});
+</script>
+</body>
+</html>

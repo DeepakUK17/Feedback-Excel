@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduVerify — College Feedback Excel Tool</title>
+  <meta name="description" content="Validate or generate college feedback Excel files instantly — 100% in your browser, no server needed." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* Landing-page-specific overrides */
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+    .hero-bg { flex: 1; }
+    .hero-content { padding: 4rem 1rem 2.5rem; }
+
+    .landing-footer {
+      text-align: center;
+      padding: 1.75rem;
+      background: var(--bg-base);
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      position: relative; z-index: 1;
+    }
+    .info-strip {
+      position: relative; z-index: 1;
+      padding: 2.5rem 0;
+      background: rgba(17,24,39,0.7);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    [data-theme="light"] .info-strip {
+      background: rgba(240,244,255,0.7);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
+<nav class="ev-navbar">
+  <a href="index.html" class="ev-navbar-brand">
+    <div class="brand-icon">📊</div>
+    <span>EduVerify</span>
+  </a>
+  <div class="ev-nav-actions">
+    <a href="validate.html" class="ev-nav-link">🔍 Validate</a>
+    <a href="generate.html" class="ev-nav-link">🏗️ Generate</a>
+    <button class="ev-theme-toggle" id="themeToggle" title="Toggle theme"></button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════ HERO ═══════════════════════ -->
+<div class="hero-bg">
+  <div class="hero-orb orb-1"></div>
+  <div class="hero-orb orb-2"></div>
+  <div class="hero-orb orb-3"></div>
+
+  <div class="hero-content ev-container">
+
+    <div class="hero-eyebrow animate-fadeInUp">
+      <span>🎓</span> College Feedback Excel System
+    </div>
+
+    <h1 class="hero-title animate-fadeInUp animate-delay-1">
+      Smarter Feedback<br/>
+      <span class="text-gradient">Excel Management</span>
+    </h1>
+
+    <p class="hero-desc animate-fadeInUp animate-delay-2">
+      Validate improperly formatted feedback Excel files or generate perfect ones from scratch — entirely in your browser, no server required.
+    </p>
+
+    <!-- Stats -->
+    <div class="hero-stats animate-fadeInUp animate-delay-3">
+      <div class="hero-stat">
+        <div class="hero-stat-val">10+</div>
+        <div class="hero-stat-label">Validation Rules</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">11</div>
+        <div class="hero-stat-label">Excel Columns</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">100%</div>
+        <div class="hero-stat-label">Browser-Based</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">0</div>
+        <div class="hero-stat-label">Server Needed</div>
+      </div>
+    </div>
+
+    <!-- Choice Cards -->
+    <div class="choice-grid animate-fadeInUp animate-delay-4">
+
+      <a href="validate.html" class="choice-card validate-card" id="validateCard">
+        <span class="choice-icon">🔍</span>
+        <div class="choice-title">Excel Validation</div>
+        <div class="choice-desc">Upload a feedback Excel and instantly detect all errors — missing students, wrong subject counts, duplicates, and more.</div>
+        <div class="choice-features">
+          <div class="choice-feature"><span>✅</span> Missing roll numbers detection</div>
+          <div class="choice-feature"><span>✅</span> Subject count per student check</div>
+          <div class="choice-feature"><span>✅</span> Duplicate rows & conflicts</div>
+          <div class="choice-feature"><span>✅</span> Download error report (Excel/CSV/JSON)</div>
+        </div>
+        <div class="choice-cta">Start Validation →</div>
+      </a>
+
+      <a href="generate.html" class="choice-card generate-card" id="generateCard">
+        <span class="choice-icon">🏗️</span>
+        <div class="choice-title">Excel Generation</div>
+        <div class="choice-desc">Upload your student list and staff/course details — we'll generate a perfectly formatted feedback Excel with zero errors.</div>
+        <div class="choice-features">
+          <div class="choice-feature"><span>✅</span> Upload student list Excel</div>
+          <div class="choice-feature"><span>✅</span> Upload staff & course Excel</div>
+          <div class="choice-feature"><span>✅</span> Auto cross-join students × subjects</div>
+          <div class="choice-feature"><span>✅</span> Download perfect feedback Excel</div>
+        </div>
+        <div class="choice-cta">Generate Excel →</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- Info Strip -->
+  <div class="info-strip">
+    <div class="ev-container">
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <div class="feature-title">100% Private</div>
+          <div class="feature-desc">Your files never leave your device. All processing happens in the browser — no uploads to any server.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">Instant Results</div>
+          <div class="feature-desc">Validation runs in milliseconds. No waiting for server responses or API calls.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📥</div>
+          <div class="feature-title">Multiple Formats</div>
+          <div class="feature-desc">Download validation reports as Excel or CSV. Generated feedback files as .xlsx.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <div class="feature-title">Works Offline</div>
+          <div class="feature-desc">No internet required after first load. Use it anywhere, even without a network connection.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /hero-bg -->
+
+<footer class="landing-footer">
+  <strong>EduVerify 2.0</strong> · College Feedback Excel Tool · 
+  Built with ❤️ · 
+  <a href="https://github.com/DeepakUK17/Feedback-Excel" target="_blank" style="color:var(--primary-light)">GitHub</a>
+</footer>
+
+<script src="js/utils.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    window.EV.ThemeManager.init();
+
+    // Hover effects for choice cards
+    document.querySelectorAll('.choice-card').forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        card.querySelector('.choice-cta').style.transform = 'scale(1.05)';
+      });
+      card.addEventListener('mouseleave', () => {
+        card.querySelector('.choice-cta').style.transform = '';
+      });
+    });
+  });
+</script>
+</body>
+</html>
