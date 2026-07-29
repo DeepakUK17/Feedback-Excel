@@ -258,6 +258,10 @@
             <span class="dl-icon">🗂️</span>
             JSON (.json)
           </button>
+          <button class="download-btn" id="dlPdf" style="border-color:rgba(239,35,60,0.35);background:rgba(239,35,60,0.08)">
+            <span class="dl-icon">📑</span>
+            PDF Report
+          </button>
         </div>
 
         <!-- Re-validate -->
@@ -352,6 +356,9 @@
 
 <!-- SheetJS CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- jsPDF + autoTable for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/validate.js"></script>
 <script>
@@ -640,6 +647,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!validationResult) return;
     EVValidate.buildJsonReport(validationResult, 'EduVerify_Validation_Report.json');
     Toast.success('JSON report downloaded!');
+  });
+
+  Dom.get('dlPdf').addEventListener('click', () => {
+    if (!validationResult) return;
+    Toast.info('Generating PDF…');
+    setTimeout(() => {
+      EVValidate.buildPdfReport(validationResult, 'EduVerify_Validation_Report.pdf');
+    }, 80);
   });
 
   /* ── Re-validate / New File ─────────────────────────────── */

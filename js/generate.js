@@ -122,14 +122,11 @@ window.EVGenerate = (function () {
   const downloadExcel = (outputRows, filename = 'Feedback_Excel.xlsx') => {
     if (typeof XLSX === 'undefined') { window.EV.Toast.error('SheetJS not loaded.'); return; }
 
-    // Header row with display-friendly names
-    const headerDisplay = [
-      'Department', 'Roll Number', 'Student Name', 'Staff ID', 'Staff Name',
-      'Subject Code', 'Subject Name', 'Section', 'Year', 'Batch', 'Academic Year'
-    ];
+    // Header row — exactly matching Good.xlsx column names
+    const headerRow = OUTPUT_COLS; // ['department', 'roll_number', ...]
 
     const data = [
-      headerDisplay,
+      headerRow,
       ...outputRows.map(row => OUTPUT_COLS.map(col => row[col] ?? ''))
     ];
 
@@ -170,7 +167,7 @@ window.EVGenerate = (function () {
   /* ── Preview HTML Table ────────────────────────────────────────── */
   const buildPreviewTable = (outputRows, maxRows = 20) => {
     const preview = outputRows.slice(0, maxRows);
-    const headers = OUTPUT_COLS.map(c => `<th>${c.replace(/_/g, ' ')}</th>`).join('');
+    const headers = OUTPUT_COLS.map(c => `<th>${c}</th>`).join('');
     const rows = preview.map(row =>
       `<tr>${OUTPUT_COLS.map(col => `<td title="${row[col] ?? ''}">${row[col] ?? ''}</td>`).join('')}</tr>`
     ).join('');

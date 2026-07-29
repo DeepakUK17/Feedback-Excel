@@ -327,58 +327,114 @@ window.EVValidate = (function () {
 
   /* ── Report Builders ─────────────────────────────────────────────── */
   const buildExcelReport = (result, filename = 'EduVerify_Report.xlsx') => {
-    const { Download } = window.EV;
     const { summary, errors } = result;
+    if (typeof XLSX === 'undefined') { window.EV.Toast.error('SheetJS not loaded.'); return; }
 
-    // Sheet 1: Summary
+    const wb = XLSX.utils.book_new();
+
+    // ── Sheet 1: Summary ──
     const summaryData = [
-      ['EduVerify Validation Report'],
+      ['EduVerify Validation Report', ''],
       ['Generated at', new Date().toLocaleString()],
       ['Overall Status', result.overallStatus],
-      [],
-      ['SUMMARY', ''],
-      ['Total Rows', summary.totalRows],
+      ['', ''],
+      ['METRIC', 'VALUE'],
+      ['Total Rows in File', summary.totalRows],
       ['Unique Students Found', summary.uniqueStudents],
       ['Expected Students', summary.expectedStudents],
       ['Expected Subjects Per Student', summary.expectedSubjects],
       ['Total Errors', summary.totalErrors],
       ['Total Warnings', summary.totalWarnings],
-      ['Blank Cells', summary.blankCells],
-      ['Duplicate Rows', summary.duplicateRows],
+      ['Blank Cells Found', summary.blankCells],
+      ['Duplicate Rows Found', summary.duplicateRows],
       ['Validation Duration (ms)', summary.validationDurationMs],
     ];
-
-    // Sheet 2: Error Details
-    const errorHeaders = ['Severity', 'Rule ID', 'Error Type', 'Row Number', 'Column', 'Roll Number', 'Student Name', 'Description', 'Suggested Fix'];
-    const errorRows = errors.map(e => [
-      e.severity.toUpperCase(), e.ruleId, e.errorType,
-      e.rowNumber || '', e.columnName || '', e.rollNumber || '', e.studentName || '',
-      e.description, e.suggestedFix
-    ]);
-
-    if (typeof XLSX === 'undefined') { window.EV.Toast.error('SheetJS not loaded.'); return; }
-    const wb = XLSX.utils.book_new();
-
     const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
-    ws1['!cols'] = [{ wch: 30 }, { wch: 40 }];
+    ws1['!cols'] = [{ wch: 35 }, { wch: 45 }];
     XLSX.utils.book_append_sheet(wb, ws1, 'Summary');
 
-    const ws2 = XLSX.utils.aoa_to_sheet([errorHeaders, ...errorRows]);
-    ws2['!cols'] = errorHeaders.map((h, i) => ({
-      wch: Math.max(h.length, ...(errorRows.map(r => String(r[i] ?? '').length))) + 2
+    // ── Sheet 2: Error Log (every error/warning as a row) ──
+    const errHeaders = [
+      'Severity', 'Rule ID', 'Error Type',
+      'Row Number', 'Column Name', 'Roll Number', 'Student Name',
+      'Description', 'Suggested Fix'
+    ];
+    const errData = errors.length > 0
+      ? errors.map(e => [
+          (e.severity || '').toUpperCase(),
+          e.ruleId   || '',
+          e.errorType|| '',
+          e.rowNumber    != null ? e.rowNumber    : '',
+          e.columnName   != null ? e.columnName   : '',
+          e.rollNumber   != null ? e.rollNumber   : '',
+          e.studentName  != null ? e.studentName  : '',
+          e.description  || '',
+          e.suggestedFix || ''
+        ])
+      : [['No issues found', '', '', '', '', '', '', '', '']];
+
+    const ws2 = XLSX.utils.aoa_to_sheet([errHeaders, ...errData]);
+    // Set column widths
+    const colWidths = errHeaders.map((h, ci) => ({
+      wch: Math.max(h.length, ...errData.map(r => String(r[ci] ?? '').length)) + 3
     }));
-    XLSX.utils.book_append_sheet(wb, ws2, 'Errors & Warnings');
+    ws2['!cols'] = colWidths;
+    XLSX.utils.book_append_sheet(wb, ws2, 'Error Log');
+
+    // ── Sheet 3: Errors only ──
+    const onlyErrors = errors.filter(e => e.severity === 'error');
+    if (onlyErrors.length > 0) {
+      const errOnly = onlyErrors.map(e => [
+        'ERROR', e.ruleId || '', e.errorType || '',
+        e.rowNumber != null ? e.rowNumber : '',
+        e.columnName != null ? e.columnName : '',
+        e.rollNumber != null ? e.rollNumber : '',
+        e.studentName != null ? e.studentName : '',
+        e.description || '', e.suggestedFix || ''
+      ]);
+      const ws3 = XLSX.utils.aoa_to_sheet([errHeaders, ...errOnly]);
+      ws3['!cols'] = colWidths;
+      XLSX.utils.book_append_sheet(wb, ws3, 'Errors Only');
+    }
+
+    // ── Sheet 4: Warnings only ──
+    const onlyWarnings = errors.filter(e => e.severity === 'warning');
+    if (onlyWarnings.length > 0) {
+      const warnOnly = onlyWarnings.map(e => [
+        'WARNING', e.ruleId || '', e.errorType || '',
+        e.rowNumber != null ? e.rowNumber : '',
+        e.columnName != null ? e.columnName : '',
+        e.rollNumber != null ? e.rollNumber : '',
+        e.studentName != null ? e.studentName : '',
+        e.description || '', e.suggestedFix || ''
+      ]);
+      const ws4 = XLSX.utils.aoa_to_sheet([errHeaders, ...warnOnly]);
+      ws4['!cols'] = colWidths;
+      XLSX.utils.book_append_sheet(wb, ws4, 'Warnings Only');
+    }
 
     XLSX.writeFile(wb, filename);
   };
 
   const buildCsvReport = (result, filename = 'EduVerify_Report.csv') => {
-    const { errors, summary } = result;
-    const headers = ['Severity', 'Rule ID', 'Error Type', 'Row Number', 'Column', 'Roll Number', 'Student Name', 'Description', 'Suggested Fix'];
-    const rows = errors.map(e => [
-      e.severity, e.ruleId, e.errorType, e.rowNumber || '', e.columnName || '',
-      e.rollNumber || '', e.studentName || '', e.description, e.suggestedFix
-    ]);
+    const { errors } = result;
+    const headers = [
+      'Severity', 'Rule ID', 'Error Type', 'Row Number', 'Column Name',
+      'Roll Number', 'Student Name', 'Description', 'Suggested Fix'
+    ];
+    const rows = errors.length > 0
+      ? errors.map(e => [
+          (e.severity || '').toUpperCase(),
+          e.ruleId   || '',
+          e.errorType|| '',
+          e.rowNumber    != null ? e.rowNumber    : '',
+          e.columnName   != null ? e.columnName   : '',
+          e.rollNumber   != null ? e.rollNumber   : '',
+          e.studentName  != null ? e.studentName  : '',
+          e.description  || '',
+          e.suggestedFix || ''
+        ])
+      : [['No issues found', '', '', '', '', '', '', '', '']];
     window.EV.Download.csv([headers, ...rows], filename);
   };
 
@@ -387,11 +443,131 @@ window.EVValidate = (function () {
       generatedAt: new Date().toISOString(),
       overallStatus: result.overallStatus,
       summary: result.summary,
+      totalIssues: result.errors.length,
       errors: result.errors
     };
     window.EV.Download.json(report, filename);
   };
 
-  return { runValidation, buildExcelReport, buildCsvReport, buildJsonReport, MANDATORY_COLS };
+  /* ── PDF Report (jsPDF + autoTable) ──────────────────────────────── */
+  const buildPdfReport = (result, filename = 'EduVerify_Report.pdf') => {
+    if (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
+      window.EV.Toast.error('PDF library not loaded. Please check your internet connection and try again.');
+      return;
+    }
+    const { jsPDF: JSPDF } = window.jspdf || {};
+    const doc = JSPDF ? new JSPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' })
+                      : new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+
+    const { summary, errors, isReady } = result;
+    const pageW = doc.internal.pageSize.getWidth();
+    let y = 40;
+
+    // ── Title ──
+    doc.setFontSize(22);
+    doc.setTextColor(67, 97, 238);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EduVerify Validation Report', pageW / 2, y, { align: 'center' });
+    y += 28;
+
+    // ── Status Badge ──
+    doc.setFontSize(13);
+    doc.setTextColor(isReady ? 22 : 220, isReady ? 163 : 38, isReady ? 74 : 38);
+    doc.text(result.overallStatus, pageW / 2, y, { align: 'center' });
+    y += 18;
+
+    // ── Meta line ──
+    doc.setFontSize(8.5);
+    doc.setTextColor(120, 120, 140);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleString()}`, pageW / 2, y, { align: 'center' });
+    y += 22;
+
+    // ── Summary Table ──
+    doc.autoTable({
+      startY: y,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Total Rows in File', summary.totalRows],
+        ['Unique Students Found', summary.uniqueStudents],
+        ['Expected Students', summary.expectedStudents || 'Not specified'],
+        ['Expected Subjects Per Student', summary.expectedSubjects || 'Not specified'],
+        ['Total Errors', summary.totalErrors],
+        ['Total Warnings', summary.totalWarnings],
+        ['Blank Cells Found', summary.blankCells],
+        ['Duplicate Rows Found', summary.duplicateRows],
+        ['Validation Duration', `${summary.validationDurationMs} ms`],
+      ],
+      headStyles: { fillColor: [67, 97, 238], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+      bodyStyles: { fontSize: 8.5, textColor: [30, 30, 50] },
+      alternateRowStyles: { fillColor: [240, 244, 255] },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 180 }, 1: { cellWidth: 120 } },
+      margin: { left: 40, right: 40 },
+      tableWidth: 320,
+    });
+
+    y = doc.lastAutoTable.finalY + 24;
+
+    // ── Error Log Table ──
+    if (errors.length === 0) {
+      doc.setFontSize(11);
+      doc.setTextColor(22, 163, 74);
+      doc.setFont('helvetica', 'bold');
+      doc.text('✓  No errors or warnings found. File is ready for upload.', 40, y);
+    } else {
+      doc.setFontSize(11);
+      doc.setTextColor(40, 40, 60);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Error Log', 40, y);
+      y += 8;
+
+      const errRows = errors.map(e => [
+        (e.severity || '').toUpperCase(),
+        e.ruleId   || '',
+        e.errorType|| '',
+        e.rowNumber    != null ? String(e.rowNumber)    : '—',
+        e.columnName   != null ? e.columnName           : '—',
+        e.rollNumber   != null ? e.rollNumber           : '—',
+        e.description  || '',
+        e.suggestedFix || ''
+      ]);
+
+      doc.autoTable({
+        startY: y,
+        head: [['Severity', 'Rule', 'Error Type', 'Row', 'Column', 'Roll No.', 'Description', 'Suggested Fix']],
+        body: errRows,
+        headStyles: {
+          fillColor: [239, 35, 60],
+          textColor: 255,
+          fontStyle: 'bold',
+          fontSize: 7.5
+        },
+        bodyStyles: { fontSize: 7, textColor: [30, 30, 50], overflow: 'linebreak' },
+        alternateRowStyles: { fillColor: [255, 248, 248] },
+        columnStyles: {
+          0: { cellWidth: 48, fontStyle: 'bold' },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 90 },
+          3: { cellWidth: 28 },
+          4: { cellWidth: 65 },
+          5: { cellWidth: 62 },
+          6: { cellWidth: 160 },
+          7: { cellWidth: 150 },
+        },
+        margin: { left: 40, right: 40 },
+        didParseCell: (data) => {
+          if (data.section === 'body' && data.column.index === 0) {
+            data.cell.styles.textColor = data.row.raw[0] === 'ERROR'
+              ? [220, 38, 38] : [180, 100, 0];
+          }
+        },
+        showHead: 'everyPage',
+      });
+    }
+
+    doc.save(filename);
+  };
+
+  return { runValidation, buildExcelReport, buildCsvReport, buildJsonReport, buildPdfReport, MANDATORY_COLS };
 
 })();
